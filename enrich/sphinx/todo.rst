@@ -3,16 +3,29 @@
 Enrich2 Project To Do List
 ##########################
 
+Debugging
+=========
+
+Output directory errors (from Doug)
+
+Identify inconsistencies between old Enrich and new Enrich
+
+
 Implementation - High Priority
 ==============================
 
 Make a pass for adding additional status messages
 
+Add more intelligent, complete output
+
+* Write ``filter_stats`` files instead of writing to the log file
+
+* Implement better :py:meth:`~datacontainer.DataContainer.write_data` based methods for the :py:class:`~selection.Selection` and :py:class:`~experiment.Experiment`
+
 Add basic plotting functions
 
 * :py:class:`~seqlib.seqlib.SeqLib`
 	* Diversity heatmap
-	* Diversity landscape (ugh)
 	* Frequency histogram
 
 * :py:class:`~selection.Selection`
@@ -28,6 +41,8 @@ Implement wild-type correction ``[selection.py]``
 
 Implement control-based correction ``[experiment.py]``
 
+Implement filtering ``[experiment.py]``
+
 Finish implementing "unlinking" ``[selection.py]``
 
 
@@ -41,6 +56,10 @@ Define a custom logging message formatting - "root" is unnecessary and confusing
 Allow reading directly from ``.gz``/``.bz`` FASTQ_ files ``[fqread.py]``
 
 Polish pass through ``import`` statements
+
+Develop unit tests (use Python ``unittest`` library?)
+
+Add multithreading to library read stage (one thread per SeqLib to speed up file I/O step)
 
 
 Documentation

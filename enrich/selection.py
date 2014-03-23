@@ -15,6 +15,9 @@ import time
 import pandas as pd
 import numpy as np
 from collections import Counter
+import logging
+
+from sys import stderr
 
 def nonsense_ns_carryover_apply_fn(row, position):
     """
@@ -163,6 +166,7 @@ class Selection(DataContainer):
         DataContainer.__init__(self, config)
         self.libraries = dict()
         self.timepoints = list()
+        self.use_scores = True
 
         try:
             if 'barcodes' in config:
@@ -220,9 +224,11 @@ class Selection(DataContainer):
         except ValueError as value:
             raise EnrichError("Invalid parameter value %s" % value, self.name)
 
-        if len(self.libraries.keys()) < 2:
+        if len(self.timepoints) < 2:
             raise EnrichError("Insufficient number of timepoints", 
                               self.name)
+        elif len(self.timepoints) == 2:
+            self.use_scores = False
 
         if 0 not in self.timepoints:
             raise EnrichError("Missing timepoint 0", self.name)
@@ -233,7 +239,7 @@ class Selection(DataContainer):
         dtype_counts = list()
         for tp in self.timepoints:
             for lib in self.libraries[tp]:
-                dtype_counts.extend(lib.counts.keys())
+                dtype_counts.extend(lib.df_dict.keys())
         dtype_counts = Counter(dtype_counts)
         for dtype in dtype_counts:
             if dtype_counts[dtype] == len(config['libraries']):
@@ -267,28 +273,26 @@ class Selection(DataContainer):
         (not variants), see :py:meth:`count_mutations`.
         """
         # calculate counts for each SeqLib
+        logging.info("Counting for each timepoint [%s]" % self.name)
         for tp in self.timepoints:
             for lib in self.libraries[tp]:
                 lib.calculate()
         for dtype in self.df_dict:
             self.calc_counts(dtype)
-        for tp in self.timepoints:
-            for lib in self.libraries[tp]:
-                lib.dump_data()
 
 
     def calc_counts(self, dtype):
         """
         Tabulate counts for each timepoint and create the :py:class:`pandas.DataFrame` indicated by 
-        *dtype* ('variant' or 'barcode'). All :py:class:`~seqlib.seqlib.SeqLib` objects need to 
-        be counted before calling this method.
+        *dtype*. All :py:class:`~seqlib.seqlib.SeqLib` objects need to be counted before calling 
+        this method.
         """
         # combine all libraries for a given timepoint
         self.df_dict[dtype] = dict()
         for tp in self.timepoints:
-            tp_data = self.libraries[tp][0].counts[dtype]
+            tp_data = self.libraries[tp][0].df_dict[dtype]
             for lib in self.libraries[tp][1:]:
-                tp_data = tp_data.add(lib.counts[dtype], fill_value=0)
+                tp_data = tp_data.add(lib.df_dict[dtype], fill_value=0)
             self.df_dict[dtype][tp] = tp_data
 
         tp_frame = self.df_dict[dtype][0]
@@ -320,13 +324,19 @@ class Selection(DataContainer):
                 self.calc_counts(dtype)
                 self.calc_frequencies(dtype)
                 self.calc_ratios(dtype)
-                self.calc_enrichments(dtype)
+                if self.use_scores:
+                    self.calc_enrichments(dtype)
+        if self.use_scores:
+            self.sort_data('score', keys=('mutations_nt', 'mutations_aa'))
+        else:
+            self.sort_data('ratio.1', keys=('mutations_nt', 'mutations_aa'))
 
 
     def calculate(self):
         """
         Wrapper method to calculate counts, frequencies, ratios, and enrichment scores 
-        for all data in the :py:class:`Selection`.
+        for all data in the :py:class:`Selection`. Enrichment scores are only calculated 
+        if there are more than two timepoints.
         """
         self.count_timepoints()
         if self.ns_carryover_fn is not None:
@@ -334,9 +344,14 @@ class Selection(DataContainer):
         for dtype in self.df_dict:
             self.calc_frequencies(dtype)
             self.calc_ratios(dtype)
-            self.calc_enrichments(dtype)
+            if self.use_scores:
+                self.calc_enrichments(dtype)
         if 'variants' in self.df_dict and 'barcodes' in self.df_dict:
             self.calc_barcode_variation()
+        if self.use_scores:
+            self.sort_data('score')
+        else:
+            self.sort_data('ratio.1')
 
 
     def calc_frequencies(self, dtype):
@@ -462,5 +477,12 @@ class Selection(DataContainer):
                     nrows - len(self.df_dict['variants'])
 
         self.filter_stats['total'] = sum(self.filter_stats.values())
+
+
+    def write_all(self):
+        self.write_data()
+        for tp in self.timepoints:
+            for lib in self.libraries[tp]:
+                lib.write_all()
 
 

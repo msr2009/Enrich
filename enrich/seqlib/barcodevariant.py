@@ -128,7 +128,7 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
             else:
                 self.barcode_map = barcode_map
 
-        self.counts['barcodes_unmapped'] = None
+        self.df_dict['barcodes_unmapped'] = None
         self.filter_unmapped = True
 
 
@@ -138,16 +138,17 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
         variant counts using the :py:class:`BarcodeMap`.
         """
         BarcodeSeqLib.calculate(self) # count the barcodes
-        self.counts['variants'] = dict()
+        self.df_dict['variants'] = dict()
 
+        logging.info("Converting barcodes to variants [%s]" % self.name)
         if self.filter_unmapped:
-            map_mask = self.counts['barcodes'].index.isin(self.barcode_map)
-            self.counts['barcodes_unmapped'] = self.counts['barcodes'][-map_mask]
-            self.counts['barcodes'] = self.counts['barcodes'][map_mask]
+            map_mask = self.df_dict['barcodes'].index.isin(self.barcode_map)
+            self.df_dict['barcodes_unmapped'] = self.df_dict['barcodes'][-map_mask]
+            self.df_dict['barcodes'] = self.df_dict['barcodes'][map_mask]
             del map_mask
 
         # count variants associated with the barcodes
-        for bc, count in self.counts['barcodes'].iterrows():
+        for bc, count in self.df_dict['barcodes'].iterrows():
             count = count['count']
             variant = self.barcode_map[bc]
             mutations = self.count_variant(variant, copies=count)
@@ -162,15 +163,16 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
                 if bc not in self.barcode_map.variants[mutations]:
                     self.barcode_map.variants[mutations].append(bc)
 
-        self.counts['variants'] = \
-                pd.DataFrame.from_dict(self.counts['variants'], 
+        self.df_dict['variants'] = \
+                pd.DataFrame.from_dict(self.df_dict['variants'], 
                                        orient="index", dtype="int32")
-        if len(self.counts['variants']) == 0:
+        if len(self.df_dict['variants']) == 0:
             raise EnrichError("Failed to count variants", self.name)
-        self.counts['variants'].columns = ['count']
+        self.df_dict['variants'].columns = ['count']
+        self.df_dict['variants'].sort('count', ascending=False, inplace=True)
 
         logging.info("Counted %d variants (%d unique) [%s]" % \
-                (self.counts['variants']['count'].sum(), len(self.counts['variants'].index), self.name))
+                (self.df_dict['variants']['count'].sum(), len(self.df_dict['variants'].index), self.name))
         if self.aligner is not None:
             logging.info("Aligned %d variants [%s]" % (self.aligner.calls, self.name))
         self.report_filter_stats()
@@ -182,9 +184,9 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
         but are present in the library more than *mincount* times.
         """
         orphans = [x in self.barcode_map for x in \
-                   self.counts['barcodes'].index]
-        return self.counts['barcodes'][orphans] \
-                [self.counts['barcodes']['count'] >= mincount]
+                   self.df_dict['barcodes'].index]
+        return self.df_dict['barcodes'][orphans] \
+                [self.df_dict['barcodes']['count'] >= mincount]
 
 
     def report_filtered_variant(self, variant, count):

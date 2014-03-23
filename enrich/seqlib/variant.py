@@ -102,7 +102,7 @@ class VariantSeqLib(SeqLib):
         else:
             self.reference_offset = 0
 
-        self.counts['variants'] = None
+        self.df_dict['variants'] = None
 
 
     def is_coding(self):
@@ -242,9 +242,9 @@ class VariantSeqLib(SeqLib):
         else:
             variant_string = WILD_TYPE_VARIANT
         try:
-            self.counts['variants'][variant_string] += copies
+            self.df_dict['variants'][variant_string] += copies
         except KeyError:
-            self.counts['variants'][variant_string] = copies
+            self.df_dict['variants'][variant_string] = copies
         return variant_string
 
 
@@ -255,20 +255,20 @@ class VariantSeqLib(SeqLib):
         independently of the corresponding nucleotide change.
         """
         # restore the counts if they were saved to disk
-        if self.counts['variants'] is None:
+        if self.df_dict['variants'] is None:
             self.load_counts(keys=['variants'])
 
         # create new dictionaries
-        self.counts['mutations_nt'] = dict()
+        self.df_dict['mutations_nt'] = dict()
         if self.is_coding():
-            self.counts['mutations_aa'] = dict()
+            self.df_dict['mutations_aa'] = dict()
 
         if not include_indels:
-            mask = self.counts['variants'].index.map(has_indel)
-            variant_data = self.counts['variants'][np.invert(mask)]
+            mask = self.df_dict['variants'].index.map(has_indel)
+            variant_data = self.df_dict['variants'][np.invert(mask)]
             del mask
         else:
-            variant_data = self.counts['variants']
+            variant_data = self.df_dict['variants']
         if self.is_coding():
             for variant, count in variant_data.iterrows():
                 count = count['count'] # get the element from the Series
@@ -277,31 +277,31 @@ class VariantSeqLib(SeqLib):
                 for m in mutations:
                     m = m.split(" (")[0]
                     try:
-                        self.counts['mutations_nt'][m] += count
+                        self.df_dict['mutations_nt'][m] += count
                     except KeyError:
-                        self.counts['mutations_nt'][m] = count
+                        self.df_dict['mutations_nt'][m] = count
                 # get the amino acid changes
                 aa_changes = re.findall("p\.[A-Z][a-z][a-z]\d+[A-Z][a-z][a-z]", variant)
                 for a in aa_changes:
                     try:
-                        self.counts['mutations_aa'][a] += count
+                        self.df_dict['mutations_aa'][a] += count
                     except KeyError:
-                        self.counts['mutations_aa'][a] = count
+                        self.df_dict['mutations_aa'][a] = count
         else:
             for variant, count in variant_data.iterrows():
                 count = count['count'] # get the element from the Series
                 mutations = variant.split(", ")
                 for m in mutations:
                     try:
-                        self.counts['mutations_nt'][m] += count
+                        self.df_dict['mutations_nt'][m] += count
                     except KeyError:
-                        self.counts['mutations_nt'][m] = count
+                        self.df_dict['mutations_nt'][m] = count
 
-        self.counts['mutations_nt'] = \
-                pd.DataFrame.from_dict(self.counts['mutations_nt'], 
+        self.df_dict['mutations_nt'] = \
+                pd.DataFrame.from_dict(self.df_dict['mutations_nt'], 
                                        orient="index", dtype="int32")
         if self.is_coding():
-            self.counts['mutations_aa'] = \
-                    pd.DataFrame.from_dict(self.counts['mutations_aa'], 
+            self.df_dict['mutations_aa'] = \
+                    pd.DataFrame.from_dict(self.df_dict['mutations_aa'], 
                                            orient="index", dtype="int32")
 

@@ -82,7 +82,7 @@ class BarcodeSeqLib(SeqLib):
         except IOError as fqerr:
             raise EnrichError("FASTQ file error: %s" % fqerr, self.name)
 
-        self.counts['barcodes'] = None
+        self.df_dict['barcodes'] = None
 
 
     def calculate(self):
@@ -91,7 +91,7 @@ class BarcodeSeqLib(SeqLib):
         reverse-complemented), performs quality-based filtering, and counts 
         the barcodes.
         """
-        self.counts['barcodes'] = dict()
+        self.df_dict['barcodes'] = dict()
 
         # flags for verbose output of filtered reads
         filter_flags = dict()
@@ -99,6 +99,7 @@ class BarcodeSeqLib(SeqLib):
             filter_flags[key] = False
 
         # count all the barcodes
+        logging.info("Counting barcodes [%s]" % self.name)
         for fq in read_fastq(self.reads):
             fq.trim_length(self.bc_length, start=self.bc_start)
             if self.revcomp_reads:
@@ -126,21 +127,23 @@ class BarcodeSeqLib(SeqLib):
                     self.report_filtered_read(fq, filter_flags)
             else: # passed quality filtering
                 try:
-                    self.counts['barcodes'][fq.sequence.upper()] += 1
+                    self.df_dict['barcodes'][fq.sequence.upper()] += 1
                 except KeyError:
-                    self.counts['barcodes'][fq.sequence.upper()] = 1
+                    self.df_dict['barcodes'][fq.sequence.upper()] = 1
 
-        self.counts['barcodes'] = \
-                pd.DataFrame.from_dict(self.counts['barcodes'], 
+        self.df_dict['barcodes'] = \
+                pd.DataFrame.from_dict(self.df_dict['barcodes'], 
                                        orient="index", dtype="int32")
-        if len(self.counts['barcodes']) == 0:
+        if len(self.df_dict['barcodes']) == 0:
             raise EnrichError("Failed to count barcodes", self.name)
-        self.counts['barcodes'].columns = ['count']
-        self.counts['barcodes'] = \
-                self.counts['barcodes'][self.counts['barcodes']['count'] \
+        self.df_dict['barcodes'].columns = ['count']
+        self.df_dict['barcodes'] = \
+                self.df_dict['barcodes'][self.df_dict['barcodes']['count'] \
                     > self.min_count]
+        self.df_dict['barcodes'].sort('count', ascending=False, inplace=True)
 
         logging.info("Counted %d barcodes (%d unique) [%s]" % \
-                (self.counts['barcodes']['count'].sum(), len(self.counts['barcodes'].index), self.name))
+                (self.df_dict['barcodes']['count'].sum(), len(self.df_dict['barcodes'].index), self.name))
         if not self.barcodevariant:
             self.report_filter_stats()
+

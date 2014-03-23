@@ -80,7 +80,7 @@ class Experiment(DataContainer):
                               self.name)
 
         for key in self.conditions:
-            if any(len(x.timepoints) == 2 for x in self.conditions[key]):
+            if not all(x.use_scores for x in self.conditions[key]):
                 self.use_scores = False
 
 
@@ -117,7 +117,6 @@ class Experiment(DataContainer):
                             self.df_dict[dtype] = self.df_dict[dtype].join(s.df_dict[dtype][['ratio.%d' % s.timepoints[1]]],
                                 how="outer", rsuffix="%s" % s_label)
                             cnames.append("ratio.%s" % s_label)
-                s.dump_data()  
         for dtype in self.df_dict:
             self.df_dict[dtype].columns = cnames
 
@@ -146,3 +145,13 @@ class Experiment(DataContainer):
         # for each filter that's specified
         # apply the filter
         self.filter_stats['total'] = sum(self.filter_stats.values())
+
+
+    def write_all(self):
+        self.write_data()
+        for c in self.conditions:
+            for sel in self.conditions[c]:
+                sel.write_all()
+
+
+

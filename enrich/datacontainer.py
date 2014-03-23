@@ -4,6 +4,7 @@ import sys
 import time
 import os
 import logging
+import numpy as np
 
 
 def fix_filename(s):
@@ -95,16 +96,17 @@ class DataContainer(object):
         set the data to ``None`` to save memory. The 
         file names are stored for use by :py:meth:`restore_data`.
         """
+        try:
+            output_dir = os.path.join(self.output_base, "dump", fix_filename(self.name))
+        except AttributeError:
+            raise EnrichError("No output directory specified for object", self.name)
+        logging.info('Dumping to "%s" and clearing object data [%s]' % (output_dir, self.name))
+        try:
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+        except OSError:
+            raise EnrichError("Failed to create dump directory", self.name)
         for key in self.df_dict.keys():
-            try:
-                output_dir = os.path.join(self.output_base, "dump", fix_filename(self.name))
-            except AttributeError:
-                raise EnrichError("No output directory specified for object", self.name)
-            try:
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-            except OSError:
-                raise EnrichError("Failed to create dump directory", self.name)
             fname = os.path.join(output_dir, fix_filename(key + ".tsv"))
             self.df_dict[key].to_csv(fname, 
                     sep="\t", na_rep="NaN", float_format="%.4g", 
@@ -118,8 +120,8 @@ class DataContainer(object):
         Save the :py:class:`pandas.DataFrame` objects as tab-separated files in a new subdirectory of *directory* 
         with the same name as the object. If *directory* is ``None``, files will be saved to the object's default output directory.
 
-        The optional *keys* parameter is a list of types of counts to be 
-        saved. By default, all counts are saved.
+        The optional *keys* parameter is a list of types of data to be 
+        saved (variant, barcode, etc.). By default, all data are saved.
         """
         if keys is None:
             keys = self.df_dict.keys()
@@ -176,14 +178,22 @@ class DataContainer(object):
 
 
     def report_filter_stats(self):
-        elements = list()
-        for key in sorted(self.filter_stats, key=self.filter_stats.__getitem__, reverse=True):
-            if key != 'total':
-                elements.append((DataContainer._filter_messages[key], self.filter_stats[key]))
-        elements.append(('total', self.filter_stats['total']))
-        elements = ["\t".join(str(a) for a in e) for e in elements]
-        logging.info("Filtered element statistics [%s]\n%s" % \
-                (self.name, "\n".join(elements)))
+        try:
+            output_dir = os.path.join(self.output_base, fix_filename(self.name))
+        except AttributeError:
+            raise EnrichError("Invalid output directory specified for object", self.name)
+        try:
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+        except OSError:
+            raise EnrichError("Failed to create output directory", self.name)
+        with open(os.path.join(output_dir, "filter_stats.txt"), "w") as handle:
+            elements = list()
+            for key in sorted(self.filter_stats, key=self.filter_stats.__getitem__, reverse=True):
+                if key != 'total':
+                    print(DataContainer._filter_messages[key], self.filter_stats[key], sep="\t", file=handle)
+            print('total', self.filter_stats['total'], sep="\t", file=handle)
+            logging.info("Wrote filtering statistics [%s]" % self.name)
 
 
     def calculate(self):
@@ -196,3 +206,28 @@ class DataContainer(object):
 
     def make_plots(self):
         raise NotImplementedError("must be implemented by subclass")
+
+
+    def write_all(self):
+        raise NotImplementedError("must be implemented by subclass")
+
+
+    def sort_data(self, column, keys=None):
+        """
+        Sort the :py:class:`pandas.DataFrame` objects according the to the values in column *key*. The data are 
+        sorted in descending order, with the ``NaN`` values at the end.
+
+        The optional *keys* parameter is a list of types of data to be 
+        sorted (variant, barcode, etc.). By default, all data are sorted.
+        """
+        if keys is None:
+            keys = self.df_dict.keys()
+        for key in keys:
+            nan = self.df_dict[key][np.isnan(self.df_dict[key][column])]
+            if len(nan) > 0:
+                no_nan = self.df_dict[key][np.invert(np.isnan(self.df_dict[key][column]))]
+                no_nan.sort(column, ascending=False, inplace=True)
+                self.df_dict[key] = no_nan.append(nan)
+            else:
+                self.df_dict[key].sort(column, ascending=False, inplace=True)
+

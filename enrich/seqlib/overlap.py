@@ -138,13 +138,14 @@ class OverlapSeqLib(VariantSeqLib):
         Reads the forward and reverse reads, merges them, performs 
         quality-based filtering, and counts the variants.
         """
-        self.counts['variants'] = dict()
+        self.df_dict['variants'] = dict()
 
         # flags for verbose output of filtered reads
         filter_flags = dict()
         for key in self.filters:
             filter_flags[key] = False
 
+        logging.info("Counting variants [%s]" % self.name)
         for fwd, rev in read_fastq_multi([self.forward, self.reverse]):
             for key in filter_flags:
                 filter_flags[key] = False
@@ -194,15 +195,16 @@ class OverlapSeqLib(VariantSeqLib):
                     if self.verbose:
                         self.report_filtered_read(merge, filter_flags)
 
-        self.counts['variants'] = \
-                pd.DataFrame.from_dict(self.counts['variants'], 
+        self.df_dict['variants'] = \
+                pd.DataFrame.from_dict(self.df_dict['variants'], 
                                        orient="index", dtype="int32")
-        if len(self.counts['variants']) == 0:
+        if len(self.df_dict['variants']) == 0:
             raise EnrichError("Failed to count variants", self.name)
-        self.counts['variants'].columns = ['count']
+        self.df_dict['variants'].columns = ['count']
+        self.df_dict['variants'].sort('count', ascending=False, inplace=True)
 
         logging.info("Counted %d variants (%d unique) [%s]" % \
-                (self.counts['variants']['count'].sum(), len(self.counts['variants'].index), self.name))
+                (self.df_dict['variants']['count'].sum(), len(self.df_dict['variants'].index), self.name))
         if self.aligner is not None:
             logging.info("Aligned %d variants [%s]" % (self.aligner.calls, self.name))
         self.report_filter_stats()

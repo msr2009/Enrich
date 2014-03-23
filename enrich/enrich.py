@@ -30,6 +30,8 @@ if __name__ == "__main__":
 
     if args.log:
         logging.basicConfig(filename=args.log, level=log_level)
+    else:
+        logging.basicConfig(level=log_level)
 
     try:
         config = json.load(open(args.config, "U"))
@@ -51,7 +53,7 @@ if __name__ == "__main__":
         raise EnrichError("No output directory set", _DRIVER_NAME)
 
     obj.calculate()
-    obj.write_data()
+    obj.write_all()
     if args.plots:
         pass
 #        obj.make_plots()

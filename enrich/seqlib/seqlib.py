@@ -40,8 +40,8 @@ class SeqLib(DataContainer):
             self.report_filtered_reads = self.verbose
 
         # initialize data
-        self.counts = dict()        # pandas dataframes
-        self.counts_file = dict()   # paths to saved counts
+        self.df_dict = dict()        # pandas dataframes
+        self.df_file = dict()   # paths to saved counts
         self.filters = None         # dictionary
         self.filter_stats = None    # dictionary
 
@@ -65,3 +65,8 @@ class SeqLib(DataContainer):
         logging.debug("Filtered read (%s) [%s]\n%s" % \
                       (', '.join(DataContainer._filter_messages[x] 
                        for x in filter_flags if filter_flags[x]), self.name, fq))
+
+
+    def write_all(self):
+        self.write_data()
+
