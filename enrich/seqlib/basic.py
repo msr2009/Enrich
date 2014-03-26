@@ -41,12 +41,12 @@ class BasicSeqLib(VariantSeqLib):
                                       'chastity' : False,
                                       'max mutations' : len(self.wt_dna)})
         except KeyError as key:
-            raise EnrichError("missing required config value: %s" % key, self.name)
+            raise EnrichError("missing required config value: {key}".format(key=key), self.name)
 
         try:
             check_fastq(self.reads)
         except IOError as fqerr:
-            raise EnrichError("FASTQ file error: %s" % fqerr, self.name)
+            raise EnrichError("FASTQ file error: {error}".format(error=fqerr), self.name)
 
 
     def calculate(self):
@@ -61,7 +61,7 @@ class BasicSeqLib(VariantSeqLib):
         for key in self.filters:
             filter_flags[key] = False
 
-        logging.info("Counting variants [%s]" % self.name)
+        logging.info("Counting variants [{name}]".format(name=self.name))
         for fq in read_fastq(self.reads):
             if self.revcomp_reads:
                 fq.revcomp()
@@ -100,8 +100,8 @@ class BasicSeqLib(VariantSeqLib):
         self.df_dict['variants'].columns = ['count']
         self.df_dict['variants'].sort('count', ascending=False, inplace=True)
 
-        logging.info("Counted %d variants (%d unique) [%s]" % \
-                (self.df_dict['variants']['count'].sum(), len(self.df_dict['variants'].index), self.name))
+        logging.info("Counted {n} variants ({u} unique) [{name}]".format(
+                n=self.df_dict['variants']['count'].sum(), u=len(self.df_dict['variants'].index), name=self.name))
         if self.aligner is not None:
-            logging.info("Aligned %d variants [%s]" % (self.aligner.calls, self.name))
+            logging.info("Aligned {n} variants [{name}]".format(n=self.aligner.calls, name=self.name))
         self.report_filter_stats()

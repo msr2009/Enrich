@@ -75,12 +75,12 @@ class BarcodeSeqLib(SeqLib):
                                       'avg quality' : 0,
                                       'chastity' : False})
         except KeyError as key:
-            raise EnrichError("Missing required config value %s" % key, self.name)
+            raise EnrichError("Missing required config value {key}".format(key=key), self.name)
 
         try:
             check_fastq(self.reads)
         except IOError as fqerr:
-            raise EnrichError("FASTQ file error: %s" % fqerr, self.name)
+            raise EnrichError("FASTQ file error: {error}".format(error=fqerr), self.name)
 
         self.df_dict['barcodes'] = None
 
@@ -99,7 +99,7 @@ class BarcodeSeqLib(SeqLib):
             filter_flags[key] = False
 
         # count all the barcodes
-        logging.info("Counting barcodes [%s]" % self.name)
+        logging.info("Counting barcodes [{name}]".format(name=self.name))
         for fq in read_fastq(self.reads):
             fq.trim_length(self.bc_length, start=self.bc_start)
             if self.revcomp_reads:
@@ -142,8 +142,8 @@ class BarcodeSeqLib(SeqLib):
                     > self.min_count]
         self.df_dict['barcodes'].sort('count', ascending=False, inplace=True)
 
-        logging.info("Counted %d barcodes (%d unique) [%s]" % \
-                (self.df_dict['barcodes']['count'].sum(), len(self.df_dict['barcodes'].index), self.name))
+        logging.info("Counted {n} barcodes ({u} unique) [{name}]".format(
+                n=self.df_dict['barcodes']['count'].sum(), u=len(self.df_dict['barcodes'].index), name=self.name))
         if not self.barcodevariant:
             self.report_filter_stats()
 

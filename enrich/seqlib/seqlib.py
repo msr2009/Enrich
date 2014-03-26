@@ -21,10 +21,10 @@ class SeqLib(DataContainer):
         try:
             self.timepoint = int(config['timepoint'])
         except KeyError as key:
-            raise EnrichError("Missing required config value '%s'" % key, 
+            raise EnrichError("Missing required config value '{key}'".format(key=key), 
                               self.name)
         except ValueError as value:
-            raise EnrichError("Invalid parameter value %s" % value, self.name)
+            raise EnrichError("Invalid parameter value {value}".format(value=value), self.name)
 
         if 'align variants' in config:
             if config['align variants']:
@@ -62,9 +62,10 @@ class SeqLib(DataContainer):
         *filter_flags* are converted to messages using the 
         ``DataContainer._filter_messages`` dictionary.
         """
-        logging.debug("Filtered read (%s) [%s]\n%s" % \
-                      (', '.join(DataContainer._filter_messages[x] 
-                       for x in filter_flags if filter_flags[x]), self.name, fq))
+        logging.debug("Filtered read ({messages}) [{name}]\n{read!s}".format(
+                      messages=', '.join(DataContainer._filter_messages[x] 
+                                for x in filter_flags if filter_flags[x]), 
+                      name=self.name, read=fq))
 
 
     def write_all(self):

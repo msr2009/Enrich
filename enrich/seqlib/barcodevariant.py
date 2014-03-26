@@ -23,12 +23,11 @@ class BarcodeMap(dict):
     The dictionaries are created when the object is initialized.
     """
     def __init__(self, mapfile):
-        self.name = "mapfile_%s" % mapfile
+        self.name = "mapfile_{fname}".format(fname=mapfile)
         try:
             handle = open(mapfile, "U")
         except IOError:
-            raise EnrichError("Could not open barcode map file '%s'" \
-                    % mapfile, self.name)
+            raise EnrichError("Could not open barcode map file '{fname}'".format(fname=mapfile), self.name)
 
         self.filename = mapfile
         for line in handle:
@@ -53,8 +52,7 @@ class BarcodeMap(dict):
             variant = variant.upper()
             if barcode in self:
                 if self[barcode] != variant:
-                    raise EnrichError("Barcode '%s' assigned to multiple "
-                                      "unique variants" % barcode, self.name)
+                    raise EnrichError("Barcode '{bc}' assigned to multiple unique variants".format(bc=barcode), self.name)
             else:
                 self[barcode] = variant
         handle.close()
@@ -66,8 +64,7 @@ class BarcodeMap(dict):
                 self.variants[self[bc]] = list()
             self.variants[self[bc]].append(bc)
 
-        logging.info("Assigned %d barcodes to %d variants [%s]" % \
-                     (len(self.keys()), len(self.variants.keys()), self.name))
+        logging.info("Assigned {n} barcodes to {v} variants [{name}]".format(n=len(self.keys()), v=len(self.variants.keys()), name=self.name))
 
 
     def write_variants(self, fname):
@@ -77,14 +74,14 @@ class BarcodeMap(dict):
         try:
             handle = open(fname, "w")
         except IOError:
-            raise EnrichError("Could not open variant barcode map file '%s' "
-                              "for writing" % fname, self.name)
+            raise EnrichError("Could not open variant barcode map file '{fname}' "
+                              "for writing".format(fname=fname), self.name)
         for variant, barcodes in \
                 sorted(self.variants.items(), key=lambda x:x[1]):
             print(variant, ", ".join(barcodes), sep="\t", file=handle)
         handle.close()
 
-        logging.info('Wrote BarcodeMap variants file "%s" [%s]' % (fname, self.name))
+        logging.info('Wrote BarcodeMap variants file "{fname}" [{name}]'.format(fname=fname, name=self.name))
 
 
 
@@ -119,7 +116,7 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
                                       'chastity' : False,
                                       'max mutations' : len(self.wt_dna)})
         except KeyError as key:
-            raise EnrichError("Missing required config value %s" % key, 
+            raise EnrichError("Missing required config value {key}".format(key=key), 
                               self.name)
 
         if self.barcode_map is None: # not in local config
@@ -140,7 +137,7 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
         BarcodeSeqLib.calculate(self) # count the barcodes
         self.df_dict['variants'] = dict()
 
-        logging.info("Converting barcodes to variants [%s]" % self.name)
+        logging.info("Converting barcodes to variants [{name}]".format(name=self.name))
         if self.filter_unmapped:
             map_mask = self.df_dict['barcodes'].index.isin(self.barcode_map)
             self.df_dict['barcodes_unmapped'] = self.df_dict['barcodes'][-map_mask]
@@ -171,10 +168,10 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
         self.df_dict['variants'].columns = ['count']
         self.df_dict['variants'].sort('count', ascending=False, inplace=True)
 
-        logging.info("Counted %d variants (%d unique) [%s]" % \
-                (self.df_dict['variants']['count'].sum(), len(self.df_dict['variants'].index), self.name))
+        logging.info("Counted {n} variants ({u} unique) [{name}]".format(
+                n=self.df_dict['variants']['count'].sum(), u=len(self.df_dict['variants'].index), name=self.name))
         if self.aligner is not None:
-            logging.info("Aligned %d variants [%s]" % (self.aligner.calls, self.name))
+            logging.info("Aligned {n} variants [{name}]".format(n=self.aligner.calls, name=self.name))
         self.report_filter_stats()
 
 
@@ -195,6 +192,6 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
         names are converted to messages using the ``DataContainer._filter_messages`` 
         dictionary. Related to :py:meth:`SeqLib.report_filtered`.
         """
-        logging.debug("Filtered variant (quantity=%d) (%s) [%s]\n%s" % \
-                    (count, DataContainer._filter_messages['max mutations'], self.name, variant), file=handle)
+        logging.debug("Filtered variant (quantity={n}) ({messages}) [{name}]\n{read!s}".format(
+                    n=count, messages=DataContainer._filter_messages['max mutations'], name=self.name, read=variant), file=handle)
 

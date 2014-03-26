@@ -12,7 +12,7 @@ class EnrichError(Exception):
         logging.error(str(self))
 
     def __str__(self):
-        return '%s [%s]' % (repr(self.value), self.name)
+        return "{message!r} [{name}]".format(message=self.value, name=self.name)
 
 
 

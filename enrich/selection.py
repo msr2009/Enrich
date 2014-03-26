@@ -5,6 +5,7 @@ from seqlib.basic import BasicSeqLib
 from seqlib.barcodevariant import BarcodeVariantSeqLib, BarcodeMap
 from seqlib.barcode import BarcodeSeqLib
 from seqlib.overlap import OverlapSeqLib
+from seqlib.variant import WILD_TYPE_VARIANT
 from config_check import seqlib_type
 from datacontainer import DataContainer
 import os
@@ -167,6 +168,9 @@ class Selection(DataContainer):
         self.libraries = dict()
         self.timepoints = list()
         self.use_scores = True
+        self.normalize_wt = False
+        self.ns_carryover_fn = None
+        self.ns_carryover_kwargs = None
 
         try:
             if 'barcodes' in config:
@@ -214,9 +218,10 @@ class Selection(DataContainer):
                 # add additional methods here using "elif" blocks
                 else:
                     raise EnrichError("Unrecognized nonspecific carryover correction", self.name)
-            else:
-                self.ns_carryover_fn = None
-                self.ns_carryover_kwargs = None
+
+            if 'normalize wt' in config:
+                if config['normalize wt'] is True:
+                    self.normalize_wt = True
 
         except KeyError as key:
             raise EnrichError("Missing required config value %s" % key, 
@@ -329,7 +334,7 @@ class Selection(DataContainer):
         if self.use_scores:
             self.sort_data('score', keys=('mutations_nt', 'mutations_aa'))
         else:
-            self.sort_data('ratio.1', keys=('mutations_nt', 'mutations_aa'))
+            self.sort_data('ratio.%d' % self.timepoints[-1], keys=('mutations_nt', 'mutations_aa'))
 
 
     def calculate(self):
@@ -351,7 +356,7 @@ class Selection(DataContainer):
         if self.use_scores:
             self.sort_data('score')
         else:
-            self.sort_data('ratio.1')
+            self.sort_data('ratio.%d' % self.timepoints[-1])
 
 
     def calc_frequencies(self, dtype):
@@ -439,8 +444,10 @@ class Selection(DataContainer):
         options present in the configuration object. Filtering is performed 
         using the appropriate apply function. Frequencies, ratios, and 
         enrichments must be recalculated after filtering.
+
+        The data are written to the subdirectory ``"pre-filter"`` before filtering.
         """
-        self.write_data(os.path.join(self.output_base, "selection_prefilter"))
+        self.write_data(subdirectory="pre-filter")
         # for each filter that's specified
         # apply the filter
         if self.filters['max barcode variation']:
@@ -486,3 +493,15 @@ class Selection(DataContainer):
                 lib.write_all()
 
 
+    def normalize_to_wt(self):
+        """
+        Normalizes variant scores (or ratios if only two timepoints are present) such that the wild type value is "neutral" (0 for scores, 1 for ratios). Does nothing for barcode-only data.
+
+        The data are written to the subdirectory ``"pre-wtnorm"`` before normalization.
+        """
+        if 'variant' in self.df_dict.keys():
+            self.write_data(subdirectory="pre-wtnorm")
+            if self.use_scores:
+                self.df_dict['variant']['score'] = self.df_dict['variant']['score'] - self.df_dict['variant']['score'][WILD_TYPE_VARIANT]
+            else:
+                self.df_dict['variant']['ratio.%d' % self.timepoints[-1]] = self.df_dict['variant']['ratio.%d' % self.timepoints[-1]] / self.df_dict['variant']['ratio.%d' % self.timepoints[-1]][WILD_TYPE_VARIANT]

@@ -43,7 +43,7 @@ class Experiment(DataContainer):
     .. todo:: Control-based corrections are not yet implemented.
 
     If any :py:class:`~.selection.Selection` has only two timepoints, the 
-    results will be based on ratios of input and selected timepoints 
+    results will be based on the ratio of the input and the last timepoint 
     instead of scores.
     """
     def __init__(self, config):
@@ -51,8 +51,12 @@ class Experiment(DataContainer):
         self.conditions = dict()
         self.control = None
         self.use_scores = True
+        self.normalize_wt = False
 
         try:
+            if 'normalize wt' in config:
+                if config['normalize wt'] is True:
+                    self.normalize_wt = True
             for cnd in config['conditions']:
                 if not cnd['label'].isalnum():
                     raise EnrichError("Alphanumeric label required for condition '%s'" % cnd['label'], self.name)
@@ -79,9 +83,14 @@ class Experiment(DataContainer):
             raise EnrichError("No enrichment data present across all selections", 
                               self.name)
 
-        for key in self.conditions:
-            if not all(x.use_scores for x in self.conditions[key]):
-                self.use_scores = False
+        # ensure consistency for score usage
+        if not all(x.use_scores for x in all_selections):
+            self.use_scores = False
+
+        # ensure consistency for wild type normalization
+        for sel in all_selections:
+            sel.normalize_wt = self.normalize_wt
+
 
 
     def calculate(self):
@@ -109,12 +118,12 @@ class Experiment(DataContainer):
                 else:               # only two timepoints, so keep the ratio
                     if first:
                         for dtype in self.df_dict:
-                            self.df_dict[dtype] = s.df_dict[dtype][['ratio.%d' % s.timepoints[1]]]
+                            self.df_dict[dtype] = s.df_dict[dtype][['ratio.%d' % s.timepoints[-1]]]
                             cnames = ["ratio.%s" % s_label]
                         first = False
                     else:
                         for dtype in self.df_dict:
-                            self.df_dict[dtype] = self.df_dict[dtype].join(s.df_dict[dtype][['ratio.%d' % s.timepoints[1]]],
+                            self.df_dict[dtype] = self.df_dict[dtype].join(s.df_dict[dtype][['ratio.%d' % s.timepoints[-1]]],
                                 how="outer", rsuffix="%s" % s_label)
                             cnames.append("ratio.%s" % s_label)
         for dtype in self.df_dict:

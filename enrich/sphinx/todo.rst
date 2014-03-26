@@ -18,10 +18,6 @@ Make a pass for adding additional status messages
 
 Add more intelligent, complete output
 
-* Write ``filter_stats`` files instead of writing to the log file
-
-* Implement better :py:meth:`~datacontainer.DataContainer.write_data` based methods for the :py:class:`~selection.Selection` and :py:class:`~experiment.Experiment`
-
 Add basic plotting functions
 
 * :py:class:`~seqlib.seqlib.SeqLib`
@@ -36,8 +32,6 @@ Add basic plotting functions
 	* Sequence-function map
 
 Implement replicate comparison ``[experiment.py]``
-
-Implement wild-type correction ``[selection.py]``
 
 Implement control-based correction ``[experiment.py]``
 
