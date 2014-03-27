@@ -90,7 +90,7 @@ class VariantSeqLib(SeqLib):
                 self.aligner = None
 
         except KeyError as key:
-            raise EnrichError("Missing required config value '%s'" % key, 
+            raise EnrichError("Missing required config value '{key}'".format(key), 
                               self.name)
 
         if 'reference offset' in config['wild type']:

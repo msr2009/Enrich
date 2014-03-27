@@ -6,8 +6,6 @@ Enrich2 Project To Do List
 Debugging
 =========
 
-Output directory errors (from Doug)
-
 Identify inconsistencies between old Enrich and new Enrich
 
 
@@ -15,8 +13,6 @@ Implementation - High Priority
 ==============================
 
 Make a pass for adding additional status messages
-
-Add more intelligent, complete output
 
 Add basic plotting functions
 
@@ -55,6 +51,8 @@ Develop unit tests (use Python ``unittest`` library?)
 
 Add multithreading to library read stage (one thread per SeqLib to speed up file I/O step)
 
+Move to Python3-style (.format) string formatting, as is recommended for new code
+
 
 Documentation
 =============
@@ -74,3 +72,5 @@ Documentation and ``.rst`` for ``split_fastq.py``
 Bare ``.html`` landing page for the documentation
 
 More comprehensive description of filtering options
+
+Better description of the output file structure (especially *subdirectory* for :py:meth:`~datacontainer.DataContainer.write_data`)

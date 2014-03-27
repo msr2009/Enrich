@@ -103,8 +103,8 @@ class DataContainer(object):
 
     def write_data(self, subdirectory=None, keys=None):
         """
-        Save the :py:class:`pandas.DataFrame` objects as tab-separated files in a new subdirectory of *directory* 
-        with the same name as the object. If *directory* is ``None``, files will be saved to the object's default output directory.
+        Save the :py:class:`pandas.DataFrame` objects as tab-separated files 
+        with the same name as the object.
 
         The optional *keys* parameter is a list of types of data to be 
         saved (variant, barcode, etc.). By default, all data are saved.
@@ -112,9 +112,10 @@ class DataContainer(object):
         Returns a dictionary with *keys* as the keys and corresponding filenames for the ``.tsv`` files as the values. This dictionary is required by :py:meth:`dump_data`
         """
         fname_dict = dict()
-        directory = os.path.join(self.output_base, fix_filename(self.name))
         if subdirectory is not None:
-            directory = os.path.join(directory, fix_filename(subdirectory))
+            directory = os.path.join(self.output_base, fix_filename(subdirectory), fix_filename(self.name))
+        else:
+            directory = os.path.join(self.output_base, fix_filename(self.name))
         if keys is None:
             keys = self.df_dict.keys()
         for key in keys:

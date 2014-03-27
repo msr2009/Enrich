@@ -70,16 +70,16 @@ class OverlapSeqLib(VariantSeqLib):
                                       'chastity' : False,
                                       'merge failure' : True})
         except KeyError as key:
-            raise EnrichError("Missing required config value %s" % key, 
+            raise EnrichError("Missing required config value {key}".format(key=key), 
                               self.name)
         except ValueError as value:
-            raise EnrichError("Invalid parameter value %s" % value, self.name)
+            raise EnrichError("Invalid parameter value {value}".format(value=value), self.name)
 
         try:
             check_fastq(self.forward)
             check_fastq(self.reverse)
         except IOError as fqerr:
-            raise EnrichError("FASTQ file error: %s" % fqerr, self.name)
+            raise EnrichError("FASTQ file error: {error}".format(error=fqerr), self.name)
 
 
     def merge_reads(self, fwd, rev):
@@ -145,7 +145,7 @@ class OverlapSeqLib(VariantSeqLib):
         for key in self.filters:
             filter_flags[key] = False
 
-        logging.info("Counting variants [%s]" % self.name)
+        logging.info("Counting variants [{name}]".format(name=self.name))
         for fwd, rev in read_fastq_multi([self.forward, self.reverse]):
             for key in filter_flags:
                 filter_flags[key] = False
@@ -203,9 +203,9 @@ class OverlapSeqLib(VariantSeqLib):
         self.df_dict['variants'].columns = ['count']
         self.df_dict['variants'].sort('count', ascending=False, inplace=True)
 
-        logging.info("Counted %d variants (%d unique) [%s]" % \
-                (self.df_dict['variants']['count'].sum(), len(self.df_dict['variants'].index), self.name))
+        logging.info("Counted {n} variants ({u} unique) [{name}]".format(
+                n=self.df_dict['variants']['count'].sum(), u=len(self.df_dict['variants'].index), name=self.name))
         if self.aligner is not None:
-            logging.info("Aligned %d variants [%s]" % (self.aligner.calls, self.name))
+            logging.info("Aligned {n} variants [{name}]".format(n=self.aligner.calls, name=self.name))
         self.report_filter_stats()
 
