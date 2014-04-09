@@ -120,7 +120,6 @@ class VariantSeqLib(SeqLib):
         if not re.match("^[ACGTacgt]+$", sequence):
             raise EnrichError("WT DNA sequence contains unexpected "
                               "characters", self.name)
-
         if len(sequence) % 3 != 0 and coding:
             raise EnrichError("WT DNA sequence contains incomplete codons", 
                               self.name)
@@ -147,19 +146,18 @@ class VariantSeqLib(SeqLib):
             if cat == "match":
                 continue
             elif cat == "mismatch":
-                mut = "%s>%s" % (self.wt_dna[x], variant_dna[y])
+                mut = "{pre}>{post}".format(pre=self.wt_dna[x], post=variant_dna[y])
             elif cat == "insertion":
                 if y > length:
                     dup = variant_dna[y:y + length]
                     if dup == variant_dna[y - length:y]:
-                        mut = "dup%s" % dup
+                        mut = "dup{seq}".format(seq=dup)
                     else:
-                        mut = "_%dins%s" % (x + 2, dup)
+                        mut = "_{pos}ins{seq}".format(post=x + 2, seq=dup)
                 else:                                    
-                    mut = "_%dins%s" % (x + 2, 
-                                        variant_dna[y:y + length])
+                    mut = "_{pos}ins{seq}".format(pos=x + 2, seq=variant_dna[y:y + length])
             elif cat == "deletion":
-                mut = "_%ddel" % (x + length)
+                mut = "_{pos}del".format(pos=x + length)
             mutations.append((x, mut))
         return mutations
 
@@ -193,8 +191,7 @@ class VariantSeqLib(SeqLib):
             mutations = list()
             for i in xrange(len(variant_dna)):
                 if variant_dna[i] != self.wt_dna[i]:
-                    mutations.append((i, "%s>%s" % \
-                                       (self.wt_dna[i], variant_dna[i])))
+                    mutations.append((i, "{pre}>{post}".format(pre=self.wt_dna[i], post=variant_dna[i])))
                     if len(mutations) > self.filters['max mutations']:
                         if self.aligner is not None:
                             mutations = self.align_variant(variant_dna)
@@ -220,21 +217,19 @@ class VariantSeqLib(SeqLib):
             for pos, change in mutations:
                 ref_dna_pos = pos + self.reference_offset + 1
                 ref_pro_pos = (pos + self.reference_offset) / 3 + 1
-                mut = "c.%d%s" % (ref_dna_pos, change)
+                mut = "c.{pos}{change}".format(pos=ref_dna_pos, change=change)
                 if has_indel(change):
-                    mut += " (p.%s%dfs)" % \
-                            (aa_codes[self.wt_protein[pos / 3]], ref_pro_pos)
+                    mut += " (p.{pre}{pos}fs)".format(pre=aa_codes[self.wt_protein[pos / 3]], pos=ref_pro_pos)
                 elif variant_protein[pos / 3] == self.wt_protein[pos / 3]:
                     mut += " (p.=)"
                 else:
-                    mut += " (p.%s%d%s)" % \
-                            (aa_codes[self.wt_protein[pos / 3]], ref_pro_pos,
-                             aa_codes[variant_protein[pos / 3]])
+                    mut += " (p.{pre}{pos}{post})".format(pre=aa_codes[self.wt_protein[pos / 3]], pos=ref_pro_pos,
+                             post=aa_codes[variant_protein[pos / 3]])
                 mutation_strings.append(mut)
         else:
             for pos, change in mutations:
                 ref_dna_pos = pos + self.reference_offset + 1
-                mut = "n.%d%s" % (ref_dna_pos, change)
+                mut = "n.{pos}{change}".format(pos=ref_dna_pos, change=change)
                 mutation_strings.append(mut)
 
         if len(mutation_strings) > 0:

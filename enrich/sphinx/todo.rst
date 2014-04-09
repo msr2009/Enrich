@@ -43,8 +43,6 @@ Extend logging to use multiple files (specifically to support sending filtered r
 
 Define a custom logging message formatting - "root" is unnecessary and confusing ``[enrich.py]``
 
-Allow reading directly from ``.gz``/``.bz`` FASTQ_ files ``[fqread.py]``
-
 Polish pass through ``import`` statements
 
 Develop unit tests (use Python ``unittest`` library?)
@@ -60,8 +58,6 @@ Documentation
 Document logging behaviour (message types output at ``INFO``, ``DEBUG`` levels) and standard log message format::
 
 	Capitalized message [self.name]
-
-Write ``.rst`` file for the :py:class:`~datacontainer.DataContainer` class
 
 Write a complete list of ``JSON`` configuration options for each level in a config file (each as its own ``.rst``?)
 

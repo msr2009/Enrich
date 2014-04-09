@@ -4,6 +4,8 @@ import os.path
 import re
 import string
 import itertools
+import bz2
+import gzip
 from array import array
 
 # The following regex is referenced by line number in the class documentation.
@@ -150,18 +152,28 @@ class FQRead(object):
 
 def check_fastq(fname):
     """
-    Check that *fname* exists and has a valid FASTQ_ file extension. 
-    Returns ``None`` if the file exists and the extension is recognized 
-    (``.fastq`` or ``.fq``), otherwise raise an ``IOError``.
+    Check that *fname* exists and has a valid FASTQ_ file extension. Valid 
+    file extensions are ``.fastq`` or ``.fq``, optionally followed by ``.gz`` 
+    or ``.bz2`` if the file is compressed. Returns the compression format 
+    (``"gz"``, ``"bz2"``, or ``None``) if the file exists and the extension 
+    is recognized, otherwise raise an ``IOError``.
     """
+    compression = None
     if os.path.isfile(fname):
-        ext = os.path.splitext(fname)[-1].lower()
+        path, ext = os.path.splitext(fname)
+        ext = ext.lower()
+        if ext in (".bz2"):
+            compression = "bz2"
+            ext = os.path.splitext(path)[-1].lower()
+        elif ext in (".gz"):
+            compression = "gz"
+            ext = os.path.splitext(path)[-1].lower()
         if ext in (".fq", ".fastq"):
-            return None
+            return compression
         else:
-            print("Warning: unexpected file extension for '%s'" % fname, file=stderr)
+            print("Warning: unexpected file extension for '{fname}'".format(fname=fname), file=stderr)
     else:
-        raise IOError("file '%s' doesn't exist" % fname)
+        raise IOError("file '{fname}' doesn't exist".format(fname=fname))
 
 
 
@@ -176,8 +188,15 @@ def read_fastq(fname, filter_function=None, buffer_size=BUFFER_SIZE, qbase=33):
     .. note:: To read multiple files in parallel (such as index or \
         forward/reverse reads), use :py:func:`read_fastq_multi` instead.
     """
-    check_fastq(fname)
-    handle = open(fname, "U")
+    compression = check_fastq(fname)
+    if compression is None: # raw FASTQ
+        handle = open(fname, "rU")
+    elif compression == "bz2":
+        handle = bz2.BZ2File(fname, "rU")
+    elif compression == "gz":
+        handle = gzip.GzipFile(fname, "rU")
+    else:
+        raise IOError("unrecognized compression mode '{mode}'".format(mode=compression))
 
     eof = False
     leftover = ''

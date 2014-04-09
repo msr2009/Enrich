@@ -33,7 +33,7 @@ class DataContainer(object):
     associated log file output message added to the dictionary.
 
     .. literalinclude:: ../datacontainer.py
-        :lines: 39-54
+        :lines: 41-56
     """
 
     # Note: the following block is referenced by line number above
@@ -68,7 +68,7 @@ class DataContainer(object):
         try:
             self.name = config['name']
         except KeyError as key:
-            raise EnrichError("Missing required config value %s" % key, 
+            raise EnrichError("Missing required config value {key}".format(key=key), 
                               self.name)
         
         if 'output directory' in config:
@@ -159,8 +159,7 @@ class DataContainer(object):
             if key not in self.filters:
                 unused.append(key)
         if len(unused) > 0:
-            logging.warning("Unused filter parameters (%s) [%s]" % 
-                              ', '.join(unused), self.name)
+            logging.warning("Unused filter parameters ({unused}) [{name}]".format(unused=', '.join(unused), name=self.name))
 
         self.filter_stats = dict()
         for key in self.filters:
@@ -184,22 +183,34 @@ class DataContainer(object):
                 if key != 'total':
                     print(DataContainer._filter_messages[key], self.filter_stats[key], sep="\t", file=handle)
             print('total', self.filter_stats['total'], sep="\t", file=handle)
-            logging.info("Wrote filtering statistics [%s]" % self.name)
+            logging.info("Wrote filtering statistics [{name}]".format(self.name))
 
 
     def calculate(self):
+        """
+        Pure virtual method that defines how the data are calculated. 
+        """
         raise NotImplementedError("must be implemented by subclass")
 
 
     def filter_data(self):
+        """
+        Pure virtual method for filtering data.
+        """
         raise NotImplementedError("must be implemented by subclass")
 
 
     def make_plots(self):
+        """
+        Pure virtual method for creating plots.
+        """
         raise NotImplementedError("must be implemented by subclass")
 
 
     def write_all(self):
+        """
+        Pure virtual method for writing :py:class:`pandas.DataFrame` contents to disk.
+        """
         raise NotImplementedError("must be implemented by subclass")
 
 

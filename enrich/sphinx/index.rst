@@ -13,6 +13,7 @@ Contents:
     :maxdepth: 4
     :numbered:
 
+    datacontainer
     seqlib_overview
     selection
     experiment

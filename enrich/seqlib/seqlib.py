@@ -48,8 +48,7 @@ class SeqLib(DataContainer):
 
     def calculate(self):
         """
-        This method defines how the data is counted. It must be implemented 
-        by each subclass.
+        Pure virtual method that defines how the data are counted.
         """
         raise NotImplementedError("must be implemented by subclass")
 
