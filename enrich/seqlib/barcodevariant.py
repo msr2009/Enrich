@@ -1,6 +1,9 @@
 from __future__ import print_function
 import re
 import logging
+import gzip
+import bz2
+import os.path
 from variant import VariantSeqLib
 from barcode import BarcodeSeqLib
 from seqlib import SeqLib
@@ -14,6 +17,7 @@ class BarcodeMap(dict):
     Dictionary-derived class for storing the relationship between barcodes 
     and variants. Requires the path to a *mapfile*, containing lines in the 
     format ``'barcode<tab>variant'`` for each barcode expected in the library. 
+    This file can be plain text or compressed (``.bz2`` or ``.gz``).
     Also creates a second dictionary, ``BarcodeMap.variants``, storing a list 
     of barcodes assigned to a given variant.
 
@@ -23,9 +27,15 @@ class BarcodeMap(dict):
     The dictionaries are created when the object is initialized.
     """
     def __init__(self, mapfile):
-        self.name = "mapfile_{fname}".format(fname=mapfile)
+        self.name = "mapfile_{fname}".format(fname=os.path.basename(mapfile))
         try:
-            handle = open(mapfile, "U")
+            ext = os.path.splitext(mapfile)[-1].lower()
+            if ext in (".bz2"):
+                handle = bz2.BZ2File(mapfile, "rU")
+            elif ext in (".gz"):
+                handle = gzip.GzipFile(mapfile, "rU")
+            else:
+                handle = open(mapfile, "rU")
         except IOError:
             raise EnrichError("Could not open barcode map file '{fname}'".format(fname=mapfile), self.name)
 

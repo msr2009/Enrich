@@ -40,6 +40,9 @@ if __name__ == "__main__":
     except ValueError:
         raise EnrichError("Improperly formatted .json file", _DRIVER_NAME)
 
+    if 'output directory' not in config:
+        raise EnrichError("No output directory set", _DRIVER_NAME)
+
     if config_check.is_experiment(config):
         obj = Experiment(config)
     elif config_check.is_selection(config):
@@ -48,9 +51,6 @@ if __name__ == "__main__":
         obj = globals()[config_check.seqlib_type(config)](config)
     else:
         raise EnrichError("Unrecognized .json config", _DRIVER_NAME)
-
-    if obj.output_base is None:
-        raise EnrichError("No output directory set", _DRIVER_NAME)
 
     obj.calculate()
     obj.write_all()

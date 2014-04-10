@@ -44,7 +44,10 @@ def barcode_variation_apply_fn(row, barcode_data, mapping):
     """
     bc_scores = barcode_data.ix[mapping.variants[row.name]]['score']
     bc_scores = bc_scores[np.invert(np.isnan(bc_scores))]
-    cv = stats.variation(bc_scores)
+    if len(bc_scores) > 0:
+        cv = stats.variation(bc_scores)
+    else:
+        cv = float("NaN")
     return pd.Series({'scored.unique.barcodes' : len(bc_scores), \
                       'barcode.cv' : cv})
 
@@ -171,6 +174,7 @@ class Selection(DataContainer):
         self.normalize_wt = False
         self.ns_carryover_fn = None
         self.ns_carryover_kwargs = None
+        self.use_barcode_variation = False
 
         try:
             if 'barcodes' in config:
@@ -183,6 +187,7 @@ class Selection(DataContainer):
                 self.barcode_map = None
 
             libnames = list()
+            bcmfiles = list()
             for lib in config['libraries']:
                 if 'output directory' not in lib:
                     lib['output directory'] = self.output_base
@@ -191,6 +196,7 @@ class Selection(DataContainer):
                     raise EnrichError("Unrecognized SeqLib config", self.name)
                 elif libtype == "BarcodeVariantSeqLib":
                     new = BarcodeVariantSeqLib(lib, barcode_map=self.barcode_map)
+                    bcmfiles.append(new.barcode_map.filename)
                 else:
                     new = globals()[libtype](lib)
 
@@ -205,6 +211,16 @@ class Selection(DataContainer):
 
             if len(set(libnames)) != len(libnames):
                 raise EnrichError("Non-unique library names", self.name)
+
+            if len(bcmfiles) == len(libnames): # all BarcodeVariant
+                if len(set(bcmfiles)) == 1:    # all the same BarcodeMap
+                    self.use_barcode_variation = True
+                    if self.barcode_map is None: # same BarcodeMap specified for all SeqLibs
+                        self.barcode_map = self.libraries[0][0].barcode_map
+                    elif bcmfiles[0] != self.barcode_map.filename: # all SeqLibs are overriding the Selection BarcodeMap
+                        self.barcode_map = self.libraries[0][0].barcode_map
+                    else: # this BarcodeMap is being used for all SeqLibs
+                        pass
 
             self.set_filters(config['filters'], {'min count' : 0,
                                       'min input count' : 0,
@@ -351,7 +367,7 @@ class Selection(DataContainer):
             self.calc_ratios(dtype)
             if self.use_scores:
                 self.calc_enrichments(dtype)
-        if 'variants' in self.df_dict and 'barcodes' in self.df_dict:
+        if self.use_barcode_variation: # all SeqLibs are BarcodeVariantSeqLibs and use the same BarcodeMap
             self.calc_barcode_variation()
         if self.use_scores:
             self.sort_data('score')

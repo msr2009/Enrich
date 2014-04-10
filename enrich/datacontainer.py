@@ -183,7 +183,7 @@ class DataContainer(object):
                 if key != 'total':
                     print(DataContainer._filter_messages[key], self.filter_stats[key], sep="\t", file=handle)
             print('total', self.filter_stats['total'], sep="\t", file=handle)
-            logging.info("Wrote filtering statistics [{name}]".format(self.name))
+            logging.info("Wrote filtering statistics [{name}]".format(name=self.name))
 
 
     def calculate(self):
