@@ -12,22 +12,26 @@ from fqread import read_fastq, check_fastq
 import pandas as pd
 
 
+# variant string for a filtered variant
+FILTERED_VARIANT = "~filtered"
+
+
 class BarcodeMap(dict):
     """
     Dictionary-derived class for storing the relationship between barcodes 
     and variants. Requires the path to a *mapfile*, containing lines in the 
     format ``'barcode<tab>variant'`` for each barcode expected in the library. 
     This file can be plain text or compressed (``.bz2`` or ``.gz``).
-    Also creates a second dictionary, ``BarcodeMap.variants``, storing a list 
-    of barcodes assigned to a given variant.
 
     Barcodes must only contain the characters ``ACGT`` and variants must only 
     contain the characters ``ACGTN`` (lowercase characters are also accepted). 
-
-    The dictionaries are created when the object is initialized.
     """
     def __init__(self, mapfile):
-        self.name = "mapfile_{fname}".format(fname=os.path.basename(mapfile))
+        self.name = "barcodemap_{fname}".format(fname=os.path.basename(mapfile))
+        self.filename = mapfile
+        self.variants = dict()
+        self.bc_variant_strings = dict()
+
         try:
             ext = os.path.splitext(mapfile)[-1].lower()
             if ext in (".bz2"):
@@ -39,7 +43,6 @@ class BarcodeMap(dict):
         except IOError:
             raise EnrichError("Could not open barcode map file '{fname}'".format(fname=mapfile), self.name)
 
-        self.filename = mapfile
         for line in handle:
             # skip comments and whitespace-only lines
             if len(line.strip()) == 0 or line[0] == '#':
@@ -66,33 +69,6 @@ class BarcodeMap(dict):
             else:
                 self[barcode] = variant
         handle.close()
-
-        # build the variants dictionary
-        self.variants = dict()
-        for bc in self.keys():
-            if self[bc] not in self.variants:
-                self.variants[self[bc]] = list()
-            self.variants[self[bc]].append(bc)
-
-        logging.info("Assigned {n} barcodes to {v} variants [{name}]".format(n=len(self.keys()), v=len(self.variants.keys()), name=self.name))
-
-
-    def write_variants(self, fname):
-        """
-        Write a list of barcodes for each variant to the file *fname*.
-        """
-        try:
-            handle = open(fname, "w")
-        except IOError:
-            raise EnrichError("Could not open variant barcode map file '{fname}' "
-                              "for writing".format(fname=fname), self.name)
-        for variant, barcodes in \
-                sorted(self.variants.items(), key=lambda x:x[1]):
-            print(variant, ", ".join(barcodes), sep="\t", file=handle)
-        handle.close()
-
-        logging.info('Wrote BarcodeMap variants file "{fname}" [{name}]'.format(fname=fname, name=self.name))
-
 
 
 class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
@@ -164,11 +140,14 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
                 self.filter_stats['total'] += count
                 if self.verbose:
                     self.report_filtered_variant(variant, count)
+                if bc not in self.barcode_map.bc_variant_strings:
+                    self.barcode_map.bc_variant_strings[bc] = FILTERED_VARIANT
             else:
                 if mutations not in self.barcode_map.variants:
                     self.barcode_map.variants[mutations] = list()
-                if bc not in self.barcode_map.variants[mutations]:
-                    self.barcode_map.variants[mutations].append(bc)
+                self.barcode_map.variants[mutations].append(bc)
+                self.barcode_map.bc_variant_strings[bc] = mutations
+
 
         self.df_dict['variants'] = \
                 pd.DataFrame.from_dict(self.df_dict['variants'], 

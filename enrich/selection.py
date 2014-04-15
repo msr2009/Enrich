@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 from collections import Counter
 import logging
+import copy
 
 from sys import stderr
 
@@ -215,12 +216,18 @@ class Selection(DataContainer):
             if len(bcmfiles) == len(libnames): # all BarcodeVariant
                 if len(set(bcmfiles)) == 1:    # all the same BarcodeMap
                     self.use_barcode_variation = True
+                    unify_barcode_maps = False
                     if self.barcode_map is None: # same BarcodeMap specified for all SeqLibs
-                        self.barcode_map = self.libraries[0][0].barcode_map
+                        unify_barcode_maps = True
                     elif bcmfiles[0] != self.barcode_map.filename: # all SeqLibs are overriding the Selection BarcodeMap
-                        self.barcode_map = self.libraries[0][0].barcode_map
+                        unify_barcode_maps = True
                     else: # this BarcodeMap is being used for all SeqLibs
                         pass
+                    if unify_barcode_maps:
+                        self.barcode_map = self.libraries[0][0].barcode_map
+                        for tp in self.timepoints:
+                            for lib in self.libraries[tp]:
+                                lib.barcode_map = self.barcode_map
 
             self.set_filters(config['filters'], {'min count' : 0,
                                       'min input count' : 0,
@@ -369,6 +376,7 @@ class Selection(DataContainer):
                 self.calc_enrichments(dtype)
         if self.use_barcode_variation: # all SeqLibs are BarcodeVariantSeqLibs and use the same BarcodeMap
             self.calc_barcode_variation()
+            self.add_variants_to_barcodes()
         if self.use_scores:
             self.sort_data('score')
         else:
@@ -431,6 +439,13 @@ class Selection(DataContainer):
         self.df_dict['variants']['scored.unique.barcodes'] = \
                 barcode_cv['scored.unique.barcodes'].astype("int32")
         self.df_dict['variants']['barcode.cv'] = barcode_cv['barcode.cv']
+
+
+    def add_variants_to_barcodes(self):
+        """
+        Add the associated variant information to each row of the barcode :py:class:`pandas.DataFrame`.
+        """
+        self.df_dict['barcodes']['variant'] = self.df_dict['barcodes'].apply(lambda x: self.barcode_map.bc_variant_strings[x.name], axis=1)
 
 
     def nonspecific_carryover(self, ns_apply_fn, **kwargs):
