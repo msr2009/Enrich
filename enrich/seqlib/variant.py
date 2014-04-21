@@ -77,6 +77,7 @@ class VariantSeqLib(SeqLib):
         self.wt_dna = None
         self.wt_protein = None
         self.aligner = None
+        self.aligner_cache = None
 
         try:
             self.set_wt(config['wild type']['sequence'], 
@@ -84,10 +85,7 @@ class VariantSeqLib(SeqLib):
             if 'align variants' in config:
                 if config['align variants']:
                     self.aligner = Aligner()
-                else:
-                    self.aligner = None
-            else:
-                self.aligner = None
+                    self.aligner_cache = dict()
 
         except KeyError as key:
             raise EnrichError("Missing required config value '{key}'".format(key), 
@@ -138,8 +136,14 @@ class VariantSeqLib(SeqLib):
         Use the local :py:class:`~seqlib.aligner.Aligner` instance to align the *variant_dna* to the 
         wild type sequence. Returns a list of HGVS variant strings.
 
+        Aligned variants are stored in a local dictionary to avoid recomputing alignments. This 
+        dictionary should be cleared after all variants are counted, to save memory.
+
         .. warning:: Using the :py:class:`~seqlib.aligner.Aligner` dramatically increases runtime.
         """
+        if variant_dna in self.aligner_cache.keys():
+            return self.aligner_cache[variant_dna]
+
         mutations = list()
         traceback = self.aligner.align(self.wt_dna, variant_dna)
         for x, y, cat, length in traceback:
@@ -159,6 +163,8 @@ class VariantSeqLib(SeqLib):
             elif cat == "deletion":
                 mut = "_{pos}del".format(pos=x + length)
             mutations.append((x, mut))
+
+        self.aligner_cache[variant_dna] = mutations
         return mutations
 
 

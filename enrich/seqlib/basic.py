@@ -104,4 +104,5 @@ class BasicSeqLib(VariantSeqLib):
                 n=self.df_dict['variants']['count'].sum(), u=len(self.df_dict['variants'].index), name=self.name))
         if self.aligner is not None:
             logging.info("Aligned {n} variants [{name}]".format(n=self.aligner.calls, name=self.name))
+            self.aligner_cache = None
         self.report_filter_stats()

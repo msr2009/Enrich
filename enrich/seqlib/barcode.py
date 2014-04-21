@@ -83,6 +83,8 @@ class BarcodeSeqLib(SeqLib):
             raise EnrichError("FASTQ file error: {error}".format(error=fqerr), self.name)
 
         self.df_dict['barcodes'] = None
+        if self.min_count > 0:
+            self.df_dict['barcodes_low_abundance'] = None
 
 
     def calculate(self):
@@ -137,12 +139,14 @@ class BarcodeSeqLib(SeqLib):
         if len(self.df_dict['barcodes']) == 0:
             raise EnrichError("Failed to count barcodes", self.name)
         self.df_dict['barcodes'].columns = ['count']
-        self.df_dict['barcodes'] = \
-                self.df_dict['barcodes'][self.df_dict['barcodes']['count'] \
-                    > self.min_count]
         self.df_dict['barcodes'].sort('count', ascending=False, inplace=True)
+        if 'barcodes_low_abundance' in self.df_dict: # min count is set
+            self.df_dict['barcodes_low_abundance'] = self.df_dict['barcodes'][self.df_dict['barcodes']['count'] < self.min_count]
+            logging.info("Writing counts for {n} unique low-abundance barcodes to disk [{name}]".format(n=len(self.df_dict['barcodes_low_abundance']), name=self.name))
+            self.dump_data(keys=['barcodes_low_abundance'])
+            self.df_dict['barcodes'] = self.df_dict['barcodes'][self.df_dict['barcodes']['count'] >= self.min_count]
 
-        logging.info("Counted {n} barcodes ({u} unique) [{name}]".format(
+        logging.info("Retained counts for {n} barcodes ({u} unique) [{name}]".format(
                 n=self.df_dict['barcodes']['count'].sum(), u=len(self.df_dict['barcodes'].index), name=self.name))
         if not self.barcodevariant:
             self.report_filter_stats()

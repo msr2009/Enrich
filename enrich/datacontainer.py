@@ -90,14 +90,19 @@ class DataContainer(object):
         self.output_base = dirname
 
 
-    def dump_data(self):
+    def dump_data(self, keys=None):
         """
         Save the :py:class:`pandas.DataFrame` objects as tab-separated files and 
         set the data to ``None`` to save memory. The 
         file names are stored for use by :py:meth:`restore_data`.
+ 
+        The optional *keys* parameter is a list of types of data to be 
+        dumped (variant, barcode, etc.). By default, all data are dumped.
         """
-        self.df_files = self.write_data(subdirectory="dump")
-        for key in self.df_dict:
+        self.df_dict.update(self.write_data(subdirectory="dump", keys=keys))
+        if keys is None:
+            keys = self.df_dict.keys()
+        for key in keys:
             self.df_dict[key] = None
 
 
@@ -119,6 +124,9 @@ class DataContainer(object):
         if keys is None:
             keys = self.df_dict.keys()
         for key in keys:
+            if self.df_dict[key] is None: # dumped and not restored
+                continue
+
             try:
                 if not os.path.exists(directory):
                     os.makedirs(directory)
@@ -132,11 +140,16 @@ class DataContainer(object):
         return fname_dict
 
 
-    def restore_data(self):
+    def restore_data(self, keys=None):
         """
         Load the data from the ``.tsv`` files written by :py:meth:`dump_data`.
+
+        The optional *keys* parameter is a list of types of data to be 
+        restored (variant, barcode, etc.). By default, all data are restored.
         """
-        for key in self.df_files.keys():
+        if keys is None:
+            keys = self.df_files.keys()
+        for key in keys:
             self.df_dict[key] = pd.from_csv(self.df_files[key], sep="\t")
 
 

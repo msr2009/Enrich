@@ -274,6 +274,8 @@ class Selection(DataContainer):
                 self.df_dict[dtype] = True
         if 'barcodes_unmapped' in self.df_dict.keys(): # special case for BarcodeVariantSeqLib
             del self.df_dict['barcodes_unmapped']
+        if 'barcodes_low_abuncande' in self.df_dict.keys(): # special case for BarcodeVariantSeqLib
+            del self.df_dict['barcodes_low_abuncande']
         if len(self.df_dict.keys()) == 0:
             raise EnrichError("No count data present across all timepoints", 
                               self.name)

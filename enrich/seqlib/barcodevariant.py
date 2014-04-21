@@ -129,6 +129,8 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
             self.df_dict['barcodes_unmapped'] = self.df_dict['barcodes'][-map_mask]
             self.df_dict['barcodes'] = self.df_dict['barcodes'][map_mask]
             del map_mask
+            logging.info("Writing counts for {n} unique unmapped barcodes to disk [{name}]".format(n=len(self.df_dict['barcodes_unmapped']), name=self.name))
+            self.dump_data(keys=['barcodes_unmapped']) # save memory
 
         # count variants associated with the barcodes
         for bc, count in self.df_dict['barcodes'].iterrows():
@@ -144,8 +146,8 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
                     self.barcode_map.bc_variant_strings[bc] = FILTERED_VARIANT
             else:
                 if mutations not in self.barcode_map.variants:
-                    self.barcode_map.variants[mutations] = list()
-                self.barcode_map.variants[mutations].append(bc)
+                    self.barcode_map.variants[mutations] = set()
+                self.barcode_map.variants[mutations].update([bc])
                 self.barcode_map.bc_variant_strings[bc] = mutations
 
 
@@ -157,22 +159,12 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
         self.df_dict['variants'].columns = ['count']
         self.df_dict['variants'].sort('count', ascending=False, inplace=True)
 
-        logging.info("Counted {n} variants ({u} unique) [{name}]".format(
+        logging.info("Retained counts for {n} variants ({u} unique) [{name}]".format(
                 n=self.df_dict['variants']['count'].sum(), u=len(self.df_dict['variants'].index), name=self.name))
         if self.aligner is not None:
             logging.info("Aligned {n} variants [{name}]".format(n=self.aligner.calls, name=self.name))
+            self.aligner_cache = None
         self.report_filter_stats()
-
-
-    def orphan_barcodes(self, mincount=0):
-        """
-        Returns a list of barcodes that are not found in the object's :py:class:`BarcodeMap` 
-        but are present in the library more than *mincount* times.
-        """
-        orphans = [x in self.barcode_map for x in \
-                   self.df_dict['barcodes'].index]
-        return self.df_dict['barcodes'][orphans] \
-                [self.df_dict['barcodes']['count'] >= mincount]
 
 
     def report_filtered_variant(self, variant, count):
