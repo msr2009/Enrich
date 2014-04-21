@@ -19,18 +19,21 @@ def split_fastq(outdir, sequences, index, forward, reverse, max_mismatches):
     # build an iterator to process the files in parallel
     fq_handles = dict() # output file handles and index read sequences
     if forward is not None and reverse is not None:
-        fq_iterator = read_fastq_multi([index, forward, reverse], match_lengths=True)
+        fq_iterator = read_fastq_multi([index, forward, reverse], 
+                                       match_lengths=True)
         for s in sequences:
             name, ext = os.path.splitext(os.path.basename(index))
-            index_name = name + "_%s" % s + ext
+            index_name = "{name}_{seq}{ext}".format(name=name, seq=s, ext=ext)
             index_name = os.path.join(outdir, index_name)
 
             name, ext = os.path.splitext(os.path.basename(forward))
-            forward_name = name + "_%s" % s + ext
+            forward_name = "{name}_{seq}{ext}".format(name=name, seq=s, 
+                                                      ext=ext)
             forward_name = os.path.join(outdir, forward_name)
 
             name, ext = os.path.splitext(os.path.basename(reverse))
-            reverse_name = name + "_%s" % s + ext
+            reverse_name = "{name}_{seq}{ext}".format(name=name, seq=s, 
+                                                      ext=ext)
             reverse_name = os.path.join(outdir, reverse_name)
 
             fq_handles[s] = \
@@ -40,11 +43,12 @@ def split_fastq(outdir, sequences, index, forward, reverse, max_mismatches):
         fq_iterator = read_fastq_multi([index, forward], match_lengths=True)
         for s in sequences:
             name, ext = os.path.splitext(os.path.basename(index))
-            index_name = name + "_%s" % s + ext
+            index_name = "{name}_{seq}{ext}".format(name=name, seq=s, ext=ext)
             index_name = os.path.join(outdir, index_name)
 
             name, ext = os.path.splitext(os.path.basename(forward))
-            forward_name = name + "_%s" % s + ext
+            forward_name = "{name}_{seq}{ext}".format(name=name, seq=s, 
+                                                      ext=ext)
             forward_name = os.path.join(outdir, forward_name)
 
             fq_handles[s] = \
@@ -53,11 +57,12 @@ def split_fastq(outdir, sequences, index, forward, reverse, max_mismatches):
         fq_iterator = read_fastq_multi([index, reverse], match_lengths=True)
         for s in sequences:
             name, ext = os.path.splitext(os.path.basename(index))
-            index_name = name + "_%s" % s + ext
+            index_name = "{name}_{seq}{ext}".format(name=name, seq=s, ext=ext)
             index_name = os.path.join(outdir, index_name)
 
             name, ext = os.path.splitext(os.path.basename(reverse))
-            reverse_name = name + "_%s" % s + ext
+            reverse_name = "{name}_{seq}{ext}".format(name=name, seq=s, 
+                                                      ext=ext)
             reverse_name = os.path.join(outdir, reverse_name)
 
             fq_handles[s] = \
@@ -96,7 +101,8 @@ def split_fastq(outdir, sequences, index, forward, reverse, max_mismatches):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Create new FASTQ files for "
+                                     "reads with the given index sequences.")
     parser.add_argument("sequences", metavar="SEQ", nargs="+",
                         help="index sequence to match")
     parser.add_argument("-f", "--forward", metavar="FQ", 
@@ -113,5 +119,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    split_fastq(args.output, args.sequences, args.index, args.forward, args.reverse, args.mismatches)
+    split_fastq(args.output, args.sequences, args.index, args.forward, 
+                args.reverse, args.mismatches)
     

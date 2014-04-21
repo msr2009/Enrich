@@ -44,7 +44,7 @@ def trim_fastq(outdir, files, start, end, length):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Trim reads in FASTQ files.")
     parser.add_argument("files", metavar="FQ", nargs="+",
                         help="FASTQ files to trim")
     parser.add_argument("-s", "--start", metavar="N", 
