@@ -8,6 +8,11 @@
 
 The :py:mod:`~selection` module contains the class definition for the :py:class:`~selection.Selection` class, used for analyzing multiple timepoints in a selection experiment. Each timepoint consists of one or more `Seqlib family objects <seqlib_overview.html>`_.
 
+Configuration options
+---------------------
+
+.. include:: selection_config.rst
+
 :py:class:`~selection.Selection` class
 --------------------------------------
 .. autoclass:: selection.Selection

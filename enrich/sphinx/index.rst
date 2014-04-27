@@ -10,7 +10,7 @@ Enrich is an analysis pipeline for using high throughput sequencing data to asse
 Contents:
 
 .. toctree::
-    :maxdepth: 4
+    :maxdepth: 3
     :numbered:
 
     datacontainer
@@ -21,10 +21,23 @@ Contents:
     config_examples
 
 .. toctree::
-   :hidden:
+    :hidden:
 
-   global
-   todo
+    global
+    todo
+
+.. toctree::
+    :hidden:
+
+    datacontainer_config
+    seqlib_config
+    variant_config
+    basic_config
+    overlap_config
+    barcode_config
+    barcodevariant_config
+    selection_config
+    experiment_config
 
 Indices and tables
 ==================

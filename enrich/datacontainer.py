@@ -58,7 +58,6 @@ class DataContainer(object):
 
     def __init__(self, config):
         self.name = "Unnamed" + self.__class__.__name__
-        self.verbose = False
         self.df_dict = dict()
         self.df_files = dict()
         self.filters = None

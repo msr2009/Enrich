@@ -10,17 +10,6 @@ class BasicSeqLib(VariantSeqLib):
     Class for count data from sequencing libraries with a single read for 
     each variant. Creating a :py:class:`BasicSeqLib` requires a valid 
     *config* object, usually from a ``.json`` configuration file.
-
-    Example config file for a :py:class:`BasicSeqLib`:
-
-    .. literalinclude:: config_examples/basic.json
-
-    :download:`Download this JSON file <config_examples/basic.json>`
-
-    The ``"fastq"`` config entry can contain one read file, with the key 
-    ``"forward"`` or ``"reverse"``. If the read file is ``"reverse"``, all 
-    reads will be reverse-complemented before being compared to the wild type 
-    sequence.
     """
     def __init__(self, config):
         VariantSeqLib.__init__(self, config)
@@ -56,7 +45,6 @@ class BasicSeqLib(VariantSeqLib):
         """
         self.df_dict['variants'] = dict()
 
-        # flags for verbose output of filtered reads
         filter_flags = dict()
         for key in self.filters:
             filter_flags[key] = False
@@ -89,7 +77,7 @@ class BasicSeqLib(VariantSeqLib):
                     filter_flags['max mutations'] = True
             if any(filter_flags.values()):
                 self.filter_stats['total'] += 1
-                if self.verbose:
+                if self.report_filtered:
                     self.report_filtered_read(fq, filter_flags)
 
         self.df_dict['variants'] = \

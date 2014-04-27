@@ -26,24 +26,10 @@ class SeqLib(DataContainer):
         except ValueError as value:
             raise EnrichError("Invalid parameter value {value}".format(value=value), self.name)
 
-        if 'align variants' in config:
-            if config['align variants']:
-                self.aligner = Aligner()
-            else:
-                self.aligner = None
-        else:
-            self.aligner = None
-
         if 'report filtered reads' in config:
-            self.report_filtered_reads = config['report filtered reads']
+            self.report_filtered = config['report filtered reads']
         else:
-            self.report_filtered_reads = self.verbose
-
-        # initialize data
-        self.df_dict = dict()        # pandas dataframes
-        self.df_file = dict()   # paths to saved counts
-        self.filters = None         # dictionary
-        self.filter_stats = None    # dictionary
+            self.report_filtered = self.verbose
 
 
     def calculate(self):

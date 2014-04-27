@@ -140,7 +140,7 @@ class BarcodeVariantSeqLib(VariantSeqLib, BarcodeSeqLib):
             if mutations is None: # variant has too many mutations
                 self.filter_stats['max mutations'] += count
                 self.filter_stats['total'] += count
-                if self.verbose:
+                if self.report_filtered:
                     self.report_filtered_variant(variant, count)
                 if bc not in self.barcode_map.bc_variant_strings:
                     self.barcode_map.bc_variant_strings[bc] = FILTERED_VARIANT

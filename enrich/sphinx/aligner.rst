@@ -11,8 +11,6 @@ The :py:mod:`~seqlib.aligner` module contains a `Needleman-Wunsch
 used by :py:class:`~seqlib.variant.VariantSeqLib` objects to align variants 
 to the wild type sequence.
 
-.. note:: Alignment is typically disabled for performance reasons unless the user is interested in indel mutations.
-
 .. note:: This module uses Python's :py:class:`Exception` instead of :py:class:`~enrich_error.EnrichError` for portability.
 
 :py:class:`~seqlib.aligner.Aligner` class

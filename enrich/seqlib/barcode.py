@@ -95,7 +95,6 @@ class BarcodeSeqLib(SeqLib):
         """
         self.df_dict['barcodes'] = dict()
 
-        # flags for verbose output of filtered reads
         filter_flags = dict()
         for key in self.filters:
             filter_flags[key] = False
@@ -125,7 +124,7 @@ class BarcodeSeqLib(SeqLib):
                     filter_flags['avg quality'] = True
             if any(filter_flags.values()): # failed quality filtering
                 self.filter_stats['total'] += 1
-                if self.verbose:
+                if self.report_filtered:
                     self.report_filtered_read(fq, filter_flags)
             else: # passed quality filtering
                 try:

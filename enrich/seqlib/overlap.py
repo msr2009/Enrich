@@ -140,7 +140,6 @@ class OverlapSeqLib(VariantSeqLib):
         """
         self.df_dict['variants'] = dict()
 
-        # flags for verbose output of filtered reads
         filter_flags = dict()
         for key in self.filters:
             filter_flags[key] = False
@@ -154,11 +153,11 @@ class OverlapSeqLib(VariantSeqLib):
             if self.filters['chastity']:
                 if not fwd.is_chaste():
                     filter_flags['chastity'] = True
-                    if self.verbose:
+                    if self.report_filtered:
                         self.report_filtered_read(fwd, filter_flags)
                 if not rev.is_chaste():
                     filter_flags['chastity'] = True
-                    if self.verbose:
+                    if self.report_filtered:
                         self.report_filtered_read(rev, filter_flags)
                 if filter_flags['chastity']:
                     self.filter_stats['chastity'] += 1
@@ -169,7 +168,7 @@ class OverlapSeqLib(VariantSeqLib):
                 self.filter_stats['merge failure'] += 1
                 self.filter_stats['total'] += 1
                 filter_flags['merge failure'] = True
-                if self.verbose:
+                if self.report_filtered:
                     self.report_filtered_read(fwd, filter_flags)
                     self.report_filtered_read(rev, filter_flags)
             else:
@@ -192,7 +191,7 @@ class OverlapSeqLib(VariantSeqLib):
                         filter_flags['max mutations'] = True
                 if any(filter_flags.values()):
                     self.filter_stats['total'] += 1
-                    if self.verbose:
+                    if self.report_filtered:
                         self.report_filtered_read(merge, filter_flags)
 
         self.df_dict['variants'] = \
