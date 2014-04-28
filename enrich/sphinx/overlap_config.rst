@@ -2,74 +2,46 @@
 
 .. include:: variant_config.rst
 
-``'fastq'``
-~~~~~~~~~~~
+**'fastq'** - *required*
+	Information about the FASTQ_ file.
 
-**Required** Information about the FASTQ_ file.
+	**'forward'** and **'reverse'** - *required*
+		Both FASTQ_ files must be specified. All reads in the 'reverse' file will be reverse-complemented during the merging process.
 
-``'forward'`` and ``'reverse'``
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+**'overlap'** - *required*
+	Information about how the forward and reverse reads should be combined.
 
-**Required** Both FASTQ_ files must be specified. All reads in the ``'reverse'`` file will be reverse-complemented during the merging process.
+	**'forward start'** - *required*
+		Position in the forward read (first base is position 1) where the overlapping region begins.
 
-``'overlap'``
-~~~~~~~~~~~~~
+	**'reverse start'** - *required*
+		Position in the reverse read (first base is position 1) where the overlapping region begins. This is the position in the read before reverse-complementing.
 
-**Required** Information about how the forward and reverse reads should be combined.
+	**'length'** - *required*
+		Number of bases in the overlaping region.
 
-``'forward start'``
->>>>>>>>>>>>>>>>>>>
+**'overlap only'** - *required*
+	If this option is ``True``, the portions of the read that are outside the overlapping region will be trimmed before calling variants. Otherwise, the portion of the forward read before the overlapping region and the portion of the reverse read after the overlapping region are included in the variant sequence.
 
-**Required** Position in the forward read (first base is position 1) where the overlapping region begins.
+**'max mismatches'** - *required*
+	The maximum number of mismatches tolerated in the overlapping region.
 
-``'reverse start'``
->>>>>>>>>>>>>>>>>>>
+**'filters'** - *required*
+	Filtering options for reads and variants.
 
-**Required** Position in the reverse read (first base is position 1) where the overlapping region begins. This is the position in the read before reverse-complementing.
+	**'min quality'**
+		Minimum quality value for all bases in the merged read.
 
-``'length'``
->>>>>>>>>>>>
+	**'avg quality'**
+		Minimum average quality value for the merged read.
 
-**Required** Number of bases in the overlaping region.
+	**'chastity'**
+		If ``True``, require that both forward and reverse reads have the chastity bit set in their FASTQ_ headers.
 
-``'overlap only'``
->>>>>>>>>>>>>>>>>>
+	**'max mutations'**
+		Maximum number of mutations allowed for the variant.
 
-**Required** If this option is ``True``, the portions of the read that are outside the overlapping region will be trimmed before calling variants. Otherwise, the portion of the forward read before the overlapping region and the portion of the reverse read after the overlapping region are included in the variant sequence.
-
-``'max mismatches'``
->>>>>>>>>>>>>>>>>>>>
-
-**Required** The maximum number of mismatches tolerated in the overlapping region.
-
-``'filters'``
-~~~~~~~~~~~~~
-
-**Required** Filtering options for reads and variants.
-
-``'min quality'``
->>>>>>>>>>>>>>>>>
-
-Minimum quality value for all bases in the merged read.
-
-``'avg quality'``
->>>>>>>>>>>>>>>>>
-
-Minimum average quality value for the merged read.
-
-``'chastity'``
->>>>>>>>>>>>>>
-
-If ``True``, require that both forward and reverse reads have the chastity bit set in their FASTQ_ headers.
-
-``'max mutations'``
->>>>>>>>>>>>>>>>>>>
-
-Maximum number of mutations allowed for the variant.
-
-``'remove unresolvable'``
->>>>>>>>>>>>>>>>>>>>>>>>>
-
-Remove merged reads with unresolvable mismatches (different nucleotides with the same quality score at the same position).
+	**'remove unresolvable'**
+		Remove merged reads with unresolvable mismatches (different nucleotides with the same quality score at the same position).
 
 

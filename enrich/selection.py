@@ -139,33 +139,6 @@ class Selection(DataContainer):
     timepoints. This class coordinates :py:class:`~seqlib.seqlib.SeqLib` 
     objects. Creating a :py:class:`~selection.Selection` requires a valid 
     *config* object, usually from a ``.json`` configuration file.
-
-    Example config file for a :py:class:`~selection.Selection`:
-
-    .. literalinclude:: config_examples/selection.json
-
-    :download:`Download this JSON file <config_examples/selection.json>`
-
-    The ``"libraries"`` config entry is a list of all sequencing library 
-    configuration entries. Counts for :py:class:`~seqlib.seqlib.SeqLib` 
-    objects from the same ``timepoint`` are combined. Scores are calculated 
-    based on the resulting time series. 
-
-    All filters listed in the example config are optional. Unlike 
-    :py:class:`~seqlib.seqlib.SeqLib` objects, filtered data are not written 
-    to a log file. Instead, the data are written to a file before filtering 
-    and stored for future comparison. 
-
-    .. note:: ``"max barcode variation"`` filtering is only applicable if \
-    all sequencing data has both barcode and variant data (*i.e.* are \
-    :py:class:`~seqlib.barcodevariant.BarcodeVariantSeqLib` objects).
-
-    If the optional ``"carryover correction"`` is specified, scores will be 
-    corrected based on an estimate of nonspecific carryover (retention of 
-    non-functional variants during the selection). Currently, this is  
-    implemented for the ``"nonsense"`` option, as described by 
-    `Araya and Fowler`_. However, additional methods can be added using this 
-    as an example.
     """
     def __init__(self, config):
         DataContainer.__init__(self, config)
@@ -279,20 +252,6 @@ class Selection(DataContainer):
         if len(self.df_dict.keys()) == 0:
             raise EnrichError("No count data present across all timepoints", 
                               self.name)
-
-        try:
-            if 'correction' in config:
-                if config['correction']['method'] == "stop":
-                    if not self.libraries[0].is_coding():
-                        raise EnrichError("Invalid correction method for "
-                                          "noncoding sequences", self.name)
-                    else:
-                        config['correction']['length percentile'] # must exist
-                        self.correction = config['correction']
-            else:
-                self.correction = None
-        except KeyError as key:
-            raise EnrichError("Missing required config value %s" % key, self.name)
 
 
     def count_timepoints(self):

@@ -2,38 +2,24 @@
 
 .. include:: variant_config.rst
 
-``'fastq'``
-~~~~~~~~~~~
+**'fastq'** - *required*
+	Information about the FASTQ_ file.
 
-**Required** Information about the FASTQ_ file.
+	**'forward'** or **'reverse'** - *required*
+		Only one FASTQ_ file may be specified. If the file is 'reverse', all reads will be reverse-complemented before variants are called.
 
-``'forward'`` or ``'reverse'``
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+**'filters'**  *required*
+	Filtering options for reads and variants.
 
-**Required** Only one FASTQ_ file may be specified. If the file is ``'reverse'``, all reads will be reverse-complemented before variants are called.
+	**'min quality'**
+		Minimum quality value for all bases in the read.
 
-``'filters'``
-~~~~~~~~~~~~~
+	**'avg quality'**
+		Minimum average quality value for the read.
 
-**Required** Filtering options for reads and variants.
+	**'chastity'**
+		If ``True``, require that the read has the chastity bit set in the FASTQ_ header.
 
-``'min quality'``
->>>>>>>>>>>>>>>>>
-
-Minimum quality value for all bases in the read.
-
-``'avg quality'``
->>>>>>>>>>>>>>>>>
-
-Minimum average quality value for the read.
-
-``'chastity'``
->>>>>>>>>>>>>>
-
-If ``True``, require that the read has the chastity bit set in the FASTQ_ header.
-
-``'max mutations'``
->>>>>>>>>>>>>>>>>>>
-
-Maximum number of mutations allowed for the variant.
+	**'max mutations'**
+		Maximum number of mutations allowed for the variant.
 

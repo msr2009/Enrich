@@ -25,26 +25,6 @@ class Experiment(DataContainer):
     objects. Creating an 
     :py:class:`~experiment.Experiment` requires a valid *config* object, 
     usually from a ``.json`` configuration file.
-
-    Example config file for a :py:class:`~experiment.Experiment`:
-
-    .. literalinclude:: config_examples/experiment.json
-
-
-    :download:`Download this JSON file <config_examples/experiment.json>`
-
-    Each experimental ``condition`` contains one or more 
-    :py:class:`~.selection.Selection` elements. Multiple 
-    :py:class:`~.selection.Selection` objects assigned to the same 
-    condition are treated as independent replicates. One ``condition``
-    may be specified as a ``control``, and used for control-based score
-    corrections.
-
-    .. todo:: Control-based corrections are not yet implemented.
-
-    If any :py:class:`~.selection.Selection` has only two timepoints, the 
-    results will be based on the ratio of the input and the last timepoint 
-    instead of scores.
     """
     def __init__(self, config):
         DataContainer.__init__(self, config)
@@ -59,18 +39,22 @@ class Experiment(DataContainer):
                     self.normalize_wt = True
             for cnd in config['conditions']:
                 if not cnd['label'].isalnum():
-                    raise EnrichError("Alphanumeric label required for condition '%s'" % cnd['label'], self.name)
+                    raise EnrichError("Alphanumeric label required for condition '{label}'".format(label=cnd['label']), self.name)
                 for sel_config in cnd['selections']: # assign output base if not present
                     if 'output directory' not in sel_config:
                         sel_config['output directory'] = self.output_base
-                self.conditions[cnd['label']] = [selection.Selection(x) for x in cnd['selections']]
-                if cnd['control']:
-                    if self.control is None:
-                        self.control = self.conditions[cnd['label']]
-                    else:
-                        raise EnrichError("Multiple control conditions", self.name)
+                if cnd['label'] not in self.conditions:
+                    self.conditions[cnd['label']] = [selection.Selection(x) for x in cnd['selections']]
+                else:
+                    raise EnrichError("Non-unique condition label '{label}'".format(label=cnd['label']), self.name)
+                if 'control' in cnd:
+                    if cnd['control']:
+                        if self.control is None:
+                            self.control = self.conditions[cnd['label']]
+                        else:
+                            raise EnrichError("Multiple control conditions", self.name)
         except KeyError as key:
-            raise EnrichError("Missing required config value %s" % key, 
+            raise EnrichError("Missing required config value {key}".format(key=key), 
                               self.name)
 
         all_selections = list()
