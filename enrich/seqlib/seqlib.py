@@ -29,7 +29,7 @@ class SeqLib(DataContainer):
         if 'report filtered reads' in config:
             self.report_filtered = config['report filtered reads']
         else:
-            self.report_filtered = self.verbose
+            self.report_filtered = False
 
 
     def calculate(self):

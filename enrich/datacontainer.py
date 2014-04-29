@@ -5,6 +5,7 @@ import time
 import os
 import logging
 import numpy as np
+import pandas as pd
 
 
 def fix_filename(s):
@@ -80,7 +81,6 @@ class DataContainer(object):
         :py:meth:`dump_data` and other class-specific methods) to *dirname* 
         and creates the directory if it doesn't exist.
         """
-        #dirname = fix_filename(dirname)
         try:
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
@@ -98,9 +98,11 @@ class DataContainer(object):
         The optional *keys* parameter is a list of types of data to be 
         dumped (variant, barcode, etc.). By default, all data are dumped.
         """
-        self.df_dict.update(self.write_data(subdirectory="dump", keys=keys))
         if keys is None:
             keys = self.df_dict.keys()
+        keys = [k for k in keys if self.df_dict[k] is not None]
+        logging.info("Initiating data frame dump ({keys}) [{name}]".format(name=self.name, keys=", ".join(keys)))
+        self.df_files.update(self.write_data(subdirectory="dump", keys=keys))
         for key in keys:
             self.df_dict[key] = None
 
@@ -122,10 +124,8 @@ class DataContainer(object):
             directory = os.path.join(self.output_base, fix_filename(self.name))
         if keys is None:
             keys = self.df_dict.keys()
+        keys = [k for k in keys if self.df_dict[k] is not None]
         for key in keys:
-            if self.df_dict[key] is None: # dumped and not restored
-                continue
-
             try:
                 if not os.path.exists(directory):
                     os.makedirs(directory)
@@ -136,6 +136,7 @@ class DataContainer(object):
                     sep="\t", na_rep="NaN", float_format="%.4g", 
                     index_label="sequence")
             fname_dict[key] = fname
+        logging.info("Successfully wrote data frames ({keys}) [{name}]".format(name=self.name, keys=", ".join(keys)))
         return fname_dict
 
 
@@ -146,10 +147,11 @@ class DataContainer(object):
         The optional *keys* parameter is a list of types of data to be 
         restored (variant, barcode, etc.). By default, all data are restored.
         """
+        logging.info("Restoring data frames from dump ({keys}) [{name}]".format(name=self.name, keys=", ".join(keys)))
         if keys is None:
             keys = self.df_files.keys()
         for key in keys:
-            self.df_dict[key] = pd.from_csv(self.df_files[key], sep="\t")
+            self.df_dict[key] = pd.DataFrame.from_csv(self.df_files[key], sep="\t")
 
 
     def set_filters(self, config_filters, default_filters):
