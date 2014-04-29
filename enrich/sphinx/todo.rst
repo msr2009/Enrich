@@ -6,8 +6,22 @@ Enrich2 Project To Do List
 Debugging
 =========
 
-Identify inconsistencies between old Enrich and new Enrich
+Write unit tests for all files
 
+* :py:class:`~fqread.FQRead`
+* trim_fastq.py
+* split_fastq.py
+* config_check.py
+* enrich_error.py
+* :py:class:`~datacontainer.DataContainer`
+* :py:class:`~seqlib.seqlib.SeqLib`
+* :py:class:`~seqlib.variant.VariantSeqLib`
+* :py:class:`~seqlib.barcode.BarcodeSeqLib`
+* :py:class:`~seqlib.basic.BasicSeqLib`
+* :py:class:`~seqlib.overlap.OverlapSeqLib`
+* :py:class:`~seqlib.barcodevariant.BarcodeVariantSeqLib`
+* :py:class:`~selection.Selection`
+* :py:class:`~experiment.Experiment`
 
 Implementation - High Priority
 ==============================
@@ -45,8 +59,6 @@ Define a custom logging message formatting - "root" is unnecessary and confusing
 
 Polish pass through ``import`` statements
 
-Develop unit tests (use Python ``unittest`` library?)
-
 Add multithreading to library read stage (one thread per SeqLib to speed up file I/O step)
 
 Move to Python3-style (.format) string formatting, as is recommended for new code
@@ -58,12 +70,6 @@ Documentation
 Document logging behaviour (message types output at ``INFO``, ``DEBUG`` levels) and standard log message format::
 
 	Capitalized message [self.name]
-
-Write a complete list of ``JSON`` configuration options for each level in a config file (each as its own ``.rst``?)
-
-Documentation and ``.rst`` for ``trim_fastq.py``
-
-Documentation and ``.rst`` for ``split_fastq.py``
 
 Bare ``.html`` landing page for the documentation
 

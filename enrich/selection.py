@@ -266,6 +266,15 @@ class Selection(DataContainer):
         for tp in self.timepoints:
             for lib in self.libraries[tp]:
                 lib.calculate()
+                lib.dump_data() # dump the data to save memory while calculating
+                                # important for large barcode datasets
+
+        # restore relevant count data
+        for tp in self.timepoints:
+            for lib in self.libraries[tp]:
+                lib.restore_data(keys=self.df_dict.keys())
+
+        # perform the calculations
         for dtype in self.df_dict:
             self.calc_counts(dtype)
 
